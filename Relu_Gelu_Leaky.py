@@ -62,6 +62,11 @@ net3 = ResNet50()  # ResNet18_Leaky_Relu
 net1 = net1.to(device)
 net2 = net2.to(device)
 net3 = net3.to(device)
+if device == 'cuda':
+    net1 = torch.nn.DataParallel(net1)
+    net2 = torch.nn.DataParallel(net2)
+    net3 = torch.nn.DataParallel(net3)
+    cudnn.benchmark = True
 
 # Optimizer and Loss function
 criterion = nn.CrossEntropyLoss()
@@ -238,7 +243,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/R_G_L_train_metrics.png')
+    plt.savefig('plots/R_G_L_train_metrics_100.png')
 
     plt.figure(figsize=(12, 6))
 
@@ -262,7 +267,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/R_G_L_test_metrics.png')
+    plt.savefig('plots/R_G_L_test_metrics_100.png')
 
 for epoch in range(50):
     train(epoch)

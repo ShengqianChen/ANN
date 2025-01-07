@@ -226,7 +226,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/3_5_train_metrics.png')
+    plt.savefig('plots/3_5_train_metrics_MNIST.png')
 
     plt.figure(figsize=(12, 6))
 
@@ -248,7 +248,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/3_5_test_metrics.png')
+    plt.savefig('plots/3_5_test_metrics_MNIST.png')
 
 for epoch in range(50):
     train(epoch)
