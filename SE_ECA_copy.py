@@ -271,7 +271,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/Cifar10_SE_ECA_train_metrics.png')
+    plt.savefig('plots/Cifar10_SE_ECA_train_metrics_first10.png')
 
     plt.figure(figsize=(12, 6))
 
@@ -295,7 +295,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/Cifar10_SE_ECA_test_metrics.png')
+    plt.savefig('plots/Cifar10_SE_ECA_test_metrics_first10.png')
 
 def save_models(net1, net2, net3, epoch):
     save_dir = 'saved_models'
@@ -328,7 +328,7 @@ def plot_confusion_matrix(net, testloader, classes, title):
     plt.show()
     plt.savefig(f'plots/{title}.png')
 
-for epoch in range(100):
+for epoch in range(10):
     train(epoch)
     test(epoch)
     scheduler1.step()
@@ -339,6 +339,6 @@ save_models(net1, net2, net3, epoch)
 plot_metrics()
 
 # Plot confusion matrices for each model
-plot_confusion_matrix(net1, testloader, classes, 'Cifar10_Confusion Matrix - ResNet34')
-plot_confusion_matrix(net2, testloader, classes, 'Cifar10_Confusion Matrix - ResNet34 with SE')
-plot_confusion_matrix(net3, testloader, classes, 'Cifar10_Confusion Matrix - ResNet34 with ECA')
+plot_confusion_matrix(net1, testloader, classes, 'Cifar10_Confusion Matrix - ResNet34_first10')
+plot_confusion_matrix(net2, testloader, classes, 'Cifar10_Confusion Matrix - ResNet34 with SE_first10')
+plot_confusion_matrix(net3, testloader, classes, 'Cifar10_Confusion Matrix - ResNet34 with ECA_first10')
