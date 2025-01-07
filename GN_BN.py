@@ -44,12 +44,12 @@ transform_test = transforms.Compose([
 trainset = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=64, shuffle=True, num_workers=2)
+    trainset, batch_size=512, shuffle=True, num_workers=2)
 
 testset = torchvision.datasets.CIFAR10(
     root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(
-    testset, batch_size=64, shuffle=False, num_workers=2)
+    testset, batch_size=512, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
@@ -199,7 +199,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/64_BN_GN_train_metrics.png')
+    plt.savefig('plots/512_BN_GN_train_metrics.png')
 
     plt.figure(figsize=(12, 6))
 
@@ -221,7 +221,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/64_BN_GN_test_metrics.png')
+    plt.savefig('plots/512_BN_GN_test_metrics.png')
 
 for epoch in range(100):
     train(epoch)
