@@ -29,8 +29,6 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 # Data
 print('==> Preparing data..')
-#Cifar-10
-'''
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
@@ -46,45 +44,20 @@ transform_test = transforms.Compose([
 trainset = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=128, shuffle=True, num_workers=2)
+    trainset, batch_size=64, shuffle=True, num_workers=2)
 
 testset = torchvision.datasets.CIFAR10(
     root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(
-    testset, batch_size=100, shuffle=False, num_workers=2)
+    testset, batch_size=64, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
-'''
-# MNIST 
-transform_train = transforms.Compose([
-    transforms.ToTensor(),  
-    transforms.Normalize((0.1307,), (0.3081,))  
-])
-
-transform_test = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
-])
-
-trainset = torchvision.datasets.MNIST(
-    root='./data', train=True, download=True, transform=transform_train
-)
-trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=128, shuffle=True, num_workers=2
-)
-
-testset = torchvision.datasets.MNIST(
-    root='./data', train=False, download=True, transform=transform_test
-)
-testloader = torch.utils.data.DataLoader(
-    testset, batch_size=100, shuffle=False, num_workers=2
-)
 
 # Model
 print('==> Building model..')
-net1 = ResNet18()  # kernel size = 3
-net2 = ResNet18_pro()  # kernel size = 5
+net1 = ResNet18()  # BN
+net2 = ResNet18_GN()  # GN
 net1 = net1.to(device)
 net2 = net2.to(device)
 
@@ -209,16 +182,16 @@ def plot_metrics():
     plt.figure(figsize=(12, 6))
     
     plt.subplot(1, 2, 1)
-    plt.plot(range(1, len(train_acc_1)+1), train_acc_1, label='ResNet-18_3 Train Acc', color='blue')
-    plt.plot(range(1, len(train_acc_2)+1), train_acc_2, label='ResNet-18_5 Train Acc', color='orange')
+    plt.plot(range(1, len(train_acc_1)+1), train_acc_1, label='ResNet-18_BN Train Acc', color='blue')
+    plt.plot(range(1, len(train_acc_2)+1), train_acc_2, label='ResNet-18_GN Train Acc', color='orange')
     plt.title('Train Accuracy')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy (%)')
     plt.legend()
 
     plt.subplot(1, 2, 2)
-    plt.plot(range(1, len(train_loss_1)+1), train_loss_1, label='ResNet-18_3 Train Loss', color='blue')
-    plt.plot(range(1, len(train_loss_2)+1), train_loss_2, label='ResNet-18_5 Train Loss', color='orange')
+    plt.plot(range(1, len(train_loss_1)+1), train_loss_1, label='ResNet-18_BN Train Loss', color='blue')
+    plt.plot(range(1, len(train_loss_2)+1), train_loss_2, label='ResNet-18_GN Train Loss', color='orange')
     plt.title('Train Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
@@ -226,21 +199,21 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/3_5_train_metrics.png')
+    plt.savefig('plots/64_BN_GN_train_metrics.png')
 
     plt.figure(figsize=(12, 6))
 
     plt.subplot(1, 2, 1)
-    plt.plot(range(1, len(test_acc_1)+1), test_acc_1, label='ResNet-18_3 Test Acc', color='blue')
-    plt.plot(range(1, len(test_acc_2)+1), test_acc_2, label='ResNet-18_5 Test Acc', color='orange')
+    plt.plot(range(1, len(test_acc_1)+1), test_acc_1, label='ResNet-18_BN Test Acc', color='blue')
+    plt.plot(range(1, len(test_acc_2)+1), test_acc_2, label='ResNet-18_GN Test Acc', color='orange')
     plt.title('Test Accuracy')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy (%)')
     plt.legend()
 
     plt.subplot(1, 2, 2)
-    plt.plot(range(1, len(test_loss_1)+1), test_loss_1, label='ResNet-18_3 Test Loss', color='blue')
-    plt.plot(range(1, len(test_loss_2)+1), test_loss_2, label='ResNet-18_5 Test Loss', color='orange')
+    plt.plot(range(1, len(test_loss_1)+1), test_loss_1, label='ResNet-18_BN Test Loss', color='blue')
+    plt.plot(range(1, len(test_loss_2)+1), test_loss_2, label='ResNet-18_GN Test Loss', color='orange')
     plt.title('Test Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
@@ -248,9 +221,9 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/3_5_test_metrics.png')
+    plt.savefig('plots/64_BN_GN_test_metrics.png')
 
-for epoch in range(50):
+for epoch in range(100):
     train(epoch)
     test(epoch)
     scheduler1.step()
