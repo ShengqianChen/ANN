@@ -46,12 +46,12 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-trainset = torchvision.datasets.CIFAR100(
+trainset = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(
     trainset, batch_size=128, shuffle=True, num_workers=2)
 
-testset = torchvision.datasets.CIFAR100(
+testset = torchvision.datasets.CIFAR10(
     root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=100, shuffle=False, num_workers=2)
@@ -271,7 +271,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/Cifar100_SE_ECA_train_metrics.png')
+    plt.savefig('plots/Cifar10_SE_ECA_train_metrics.png')
 
     plt.figure(figsize=(12, 6))
 
@@ -295,16 +295,16 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/Cifar100_SE_ECA_test_metrics.png')
+    plt.savefig('plots/Cifar10_SE_ECA_test_metrics.png')
 
 def save_models(net1, net2, net3, epoch):
     save_dir = 'saved_models'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    torch.save(net1.state_dict(), os.path.join(save_dir, f'model_resnet34_epoch_{epoch}.pth'))
-    torch.save(net2.state_dict(), os.path.join(save_dir, f'model_34SE_epoch_{epoch}.pth'))
-    torch.save(net3.state_dict(), os.path.join(save_dir, f'model_34ECA_{epoch}.pth'))
+    torch.save(net1.state_dict(), os.path.join(save_dir, f'cifar_10_model_resnet34_epoch_{epoch}.pth'))
+    torch.save(net2.state_dict(), os.path.join(save_dir, f'cifar_10_model_34SE_epoch_{epoch}.pth'))
+    torch.save(net3.state_dict(), os.path.join(save_dir, f'cifar_10_model_34ECA_{epoch}.pth'))
     print(f"Models saved at epoch {epoch}")
 
 def plot_confusion_matrix(net, testloader, classes, title):
@@ -339,6 +339,6 @@ save_models(net1, net2, net3, epoch)
 plot_metrics()
 
 # Plot confusion matrices for each model
-plot_confusion_matrix(net1, testloader, classes, 'Cifar100_Confusion Matrix - ResNet34')
-plot_confusion_matrix(net2, testloader, classes, 'Cifar100_Confusion Matrix - ResNet34 with SE')
-plot_confusion_matrix(net3, testloader, classes, 'Cifar100_Confusion Matrix - ResNet34 with ECA')
+plot_confusion_matrix(net1, testloader, classes, 'Cifar10_Confusion Matrix - ResNet34')
+plot_confusion_matrix(net2, testloader, classes, 'Cifar10_Confusion Matrix - ResNet34 with SE')
+plot_confusion_matrix(net3, testloader, classes, 'Cifar10_Confusion Matrix - ResNet34 with ECA')

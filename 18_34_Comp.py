@@ -28,7 +28,7 @@ best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 # Data
-'''
+
 print('==> Preparing data..')
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
@@ -84,7 +84,7 @@ testset = torchvision.datasets.MNIST(
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=100, shuffle=False, num_workers=2
 )
-
+'''
 
 # Model
 print('==> Building model..')
