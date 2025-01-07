@@ -44,12 +44,12 @@ transform_test = transforms.Compose([
 trainset = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=128, shuffle=True, num_workers=2)
+    trainset, batch_size=256, shuffle=True, num_workers=2)
 
 testset = torchvision.datasets.CIFAR10(
     root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(
-    testset, batch_size=100, shuffle=False, num_workers=2)
+    testset, batch_size=200, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
@@ -85,6 +85,11 @@ train_acc_3, train_loss_3 = [], []
 test_acc_1, test_loss_1 = [], []
 test_acc_2, test_loss_2 = [], []
 test_acc_3, test_loss_3 = [], []
+
+# For tracking learning rate and gradient norm for all three models
+lr_1, grad_norm_1 = [], []
+lr_2, grad_norm_2 = [], []
+lr_3, grad_norm_3 = [], []
 
 # Training
 def train(epoch):
@@ -143,6 +148,15 @@ def train(epoch):
 
         progress_bar(batch_idx, len(trainloader), 'Loss1: %.3f | Acc1: %.3f%% (%d/%d) Loss2: %.3f | Acc2: %.3f%% (%d/%d) Loss3: %.3f | Acc3: %.3f%% (%d/%d)' 
                      % (running_loss1/(batch_idx+1), 100.*correct1/total1, correct1, total1, running_loss2/(batch_idx+1), 100.*correct2/total2, correct2, total2, running_loss3/(batch_idx+1), 100.*correct3/total3, correct3, total3))
+
+    # Record learning rate and gradient norm
+    lr_1.append(optimizer1.param_groups[0]['lr'])
+    lr_2.append(optimizer2.param_groups[0]['lr'] if optimizer2.param_groups[0]['lr'] is not None else optimizer2.defaults['rho'])
+    lr_3.append(optimizer3.param_groups[0]['lr'])
+
+    grad_norm_1.append(torch.norm(torch.stack([torch.norm(p.grad.detach()) for p in net1.parameters()])).item())
+    grad_norm_2.append(torch.norm(torch.stack([torch.norm(p.grad.detach()) for p in net2.parameters()])).item())
+    grad_norm_3.append(torch.norm(torch.stack([torch.norm(p.grad.detach()) for p in net3.parameters()])).item())
 
     # End of epoch print
     train_acc_1.append(100.*correct1/total1)
@@ -269,11 +283,47 @@ def plot_metrics():
     plt.show()
     plt.savefig('plots/S_A_A_test_metrics.png')
 
+    # Plot learning rate and gradient norm
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    plt.plot(range(1, len(lr_1)+1), lr_1, label='SGD', color='blue')
+    plt.plot(range(1, len(lr_2)+1), lr_2, label='AdaDelta', color='orange')
+    plt.plot(range(1, len(lr_3)+1), lr_3, label='Adam', color='green')
+    plt.title('Learning Rate')
+    plt.xlabel('Epochs')
+    plt.ylabel('Learning Rate')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(range(1, len(grad_norm_1)+1), grad_norm_1, label='SGD', color='blue')
+    plt.plot(range(1, len(grad_norm_2)+1), grad_norm_2, label='AdaDelta', color='orange')
+    plt.plot(range(1, len(grad_norm_3)+1), grad_norm_3, label='Adam', color='green')
+    plt.title('Gradient Norm')
+    plt.xlabel('Epochs')
+    plt.ylabel('Gradient Norm')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+    plt.savefig('plots/S_A_A_lr_gradnorm.png')
+
+def save_models(net1, net2, net3, epoch):
+    save_dir = 'saved_models'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    torch.save(net1.state_dict(), os.path.join(save_dir, f'model_SGD_epoch_{epoch}.pth'))
+    torch.save(net2.state_dict(), os.path.join(save_dir, f'model_AdaDelta_epoch_{epoch}.pth'))
+    torch.save(net3.state_dict(), os.path.join(save_dir, f'model_Adam_epoch_{epoch}.pth'))
+    print(f"Models saved at epoch {epoch}")
+
 for epoch in range(100):
     train(epoch)
     test(epoch)
  #   scheduler1.step()
   #  scheduler2.step()
   #  scheduler3.step()
+save_models(net1, net2, net3, epoch)
 
 plot_metrics()
