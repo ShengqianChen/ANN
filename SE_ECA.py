@@ -32,6 +32,8 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 # Data
 print('==> Preparing data..')
+#Cifar-10
+'''
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
@@ -47,15 +49,43 @@ transform_test = transforms.Compose([
 trainset = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=256, shuffle=True, num_workers=2)
+    trainset, batch_size=128, shuffle=True, num_workers=2)
 
 testset = torchvision.datasets.CIFAR10(
     root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(
-    testset, batch_size=200, shuffle=False, num_workers=2)
+    testset, batch_size=100, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
+'''
+
+classes = ('0', '1', '2', '3', '4',
+           '5', '6', '7', '8', '9')
+# MNIST 
+transform_train = transforms.Compose([
+    transforms.ToTensor(),  
+    transforms.Normalize((0.1307,), (0.3081,))  
+])
+
+transform_test = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+])
+
+trainset = torchvision.datasets.MNIST(
+    root='./data', train=True, download=True, transform=transform_train
+)
+trainloader = torch.utils.data.DataLoader(
+    trainset, batch_size=64,shuffle=True, num_workers=2
+)
+
+testset = torchvision.datasets.MNIST(
+    root='./data', train=False, download=True, transform=transform_test
+)
+testloader = torch.utils.data.DataLoader(
+    testset, batch_size=64, shuffle=False, num_workers=2
+)
 
 # Model
 print('==> Building model..')
@@ -241,7 +271,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/SE_ECA_train_metrics.png')
+    plt.savefig('plots/MNIST_SE_ECA_train_metrics.png')
 
     plt.figure(figsize=(12, 6))
 
@@ -265,7 +295,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/SE_ECA_test_metrics.png')
+    plt.savefig('plots/MNIST_SE_ECA_test_metrics.png')
 
 def save_models(net1, net2, net3, epoch):
     save_dir = 'saved_models'
@@ -309,6 +339,6 @@ save_models(net1, net2, net3, epoch)
 plot_metrics()
 
 # Plot confusion matrices for each model
-plot_confusion_matrix(net1, testloader, classes, 'Confusion Matrix - ResNet18')
-plot_confusion_matrix(net2, testloader, classes, 'Confusion Matrix - ResNet18 with SE')
-plot_confusion_matrix(net3, testloader, classes, 'Confusion Matrix - ResNet18 with ECA')
+plot_confusion_matrix(net1, testloader, classes, 'MNIST_Confusion Matrix - ResNet18')
+plot_confusion_matrix(net2, testloader, classes, 'MNIST_Confusion Matrix - ResNet18 with SE')
+plot_confusion_matrix(net3, testloader, classes, 'MNIST_Confusion Matrix - ResNet18 with ECA')

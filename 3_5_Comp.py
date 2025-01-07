@@ -226,7 +226,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/3_5_train_metrics_MNIST.png')
+    plt.savefig('plots/MNIST_3_5_train_metrics_MNIST.png')
 
     plt.figure(figsize=(12, 6))
 
@@ -248,9 +248,9 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/3_5_test_metrics_MNIST.png')
+    plt.savefig('plots/MNIST_3_5_test_metrics_MNIST.png')
 
-for epoch in range(50):
+for epoch in range(20):
     train(epoch)
     test(epoch)
     scheduler1.step()

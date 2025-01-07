@@ -29,6 +29,8 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 # Data
 print('==> Preparing data..')
+#Cifar-10
+'''
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
@@ -44,15 +46,40 @@ transform_test = transforms.Compose([
 trainset = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=512, shuffle=True, num_workers=2)
+    trainset, batch_size=128, shuffle=True, num_workers=2)
 
 testset = torchvision.datasets.CIFAR10(
     root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(
-    testset, batch_size=512, shuffle=False, num_workers=2)
+    testset, batch_size=100, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
+'''
+# MNIST 
+transform_train = transforms.Compose([
+    transforms.ToTensor(),  
+    transforms.Normalize((0.1307,), (0.3081,))  
+])
+
+transform_test = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+])
+
+trainset = torchvision.datasets.MNIST(
+    root='./data', train=True, download=True, transform=transform_train
+)
+trainloader = torch.utils.data.DataLoader(
+    trainset, batch_size=64,shuffle=True, num_workers=2
+)
+
+testset = torchvision.datasets.MNIST(
+    root='./data', train=False, download=True, transform=transform_test
+)
+testloader = torch.utils.data.DataLoader(
+    testset, batch_size=64, shuffle=False, num_workers=2
+)
 
 # Model
 print('==> Building model..')
@@ -199,7 +226,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/512_BN_GN_train_metrics.png')
+    plt.savefig('plots/MNIST_64_BN_GN_train_metrics.png')
 
     plt.figure(figsize=(12, 6))
 
@@ -221,9 +248,9 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/512_BN_GN_test_metrics.png')
+    plt.savefig('plots/MNIST_64_BN_GN_test_metrics.png')
 
-for epoch in range(100):
+for epoch in range(20):
     train(epoch)
     test(epoch)
     scheduler1.step()

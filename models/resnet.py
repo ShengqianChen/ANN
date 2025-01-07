@@ -293,7 +293,7 @@ class ResNet_pro(nn.Module):
         super(ResNet_pro, self).__init__()
         self.in_planes = 64
 
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=5,
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=5,
                                stride=1, padding=2, bias=False) #promote size
         self.bn1 = nn.BatchNorm2d(64)
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
@@ -358,7 +358,7 @@ class ResNet_GN(nn.Module):
         super(ResNet_GN, self).__init__()
         self.in_planes = 64
 
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=3,
                                stride=1, padding=1, bias=False)
         self.gn1 = nn.GroupNorm(num_groups, 64)  # GroupNorm
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1, num_groups=num_groups)
