@@ -16,6 +16,9 @@ from utils import progress_bar
 
 import matplotlib.pyplot as plt
 
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -23,7 +26,7 @@ parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
 args = parser.parse_args()
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
@@ -44,12 +47,12 @@ transform_test = transforms.Compose([
 trainset = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=128, shuffle=True, num_workers=2)
+    trainset, batch_size=256, shuffle=True, num_workers=2)
 
 testset = torchvision.datasets.CIFAR10(
     root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(
-    testset, batch_size=100, shuffle=False, num_workers=2)
+    testset, batch_size=200, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
@@ -62,11 +65,6 @@ net3 = ResNet18_with_ECA()
 net1 = net1.to(device)
 net2 = net2.to(device)
 net3 = net3.to(device)
-if device == 'cuda':
-    net1 = torch.nn.DataParallel(net1)
-    net2 = torch.nn.DataParallel(net2)
-    net3 = torch.nn.DataParallel(net3)
-    cudnn.benchmark = True
 
 # Optimizer and Loss function
 criterion = nn.CrossEntropyLoss()
@@ -269,6 +267,37 @@ def plot_metrics():
     plt.show()
     plt.savefig('plots/SE_ECA_test_metrics.png')
 
+def save_models(net1, net2, net3, epoch):
+    save_dir = 'saved_models'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    torch.save(net1.state_dict(), os.path.join(save_dir, f'model_resnet18_epoch_{epoch}.pth'))
+    torch.save(net2.state_dict(), os.path.join(save_dir, f'model_SE_epoch_{epoch}.pth'))
+    torch.save(net3.state_dict(), os.path.join(save_dir, f'model_ECA_{epoch}.pth'))
+    print(f"Models saved at epoch {epoch}")
+
+def plot_confusion_matrix(net, testloader, classes, title):
+    y_true = []
+    y_pred = []
+    net.eval()
+    with torch.no_grad():
+        for inputs, targets in testloader:
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs = net(inputs)
+            _, predicted = outputs.max(1)
+            y_true.extend(targets.cpu().numpy())
+            y_pred.extend(predicted.cpu().numpy())
+
+    cm = confusion_matrix(y_true, y_pred)
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=classes, yticklabels=classes)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.title(title)
+    plt.show()
+    plt.savefig(f'plots/{title}.png')
+
 for epoch in range(100):
     train(epoch)
     test(epoch)
@@ -276,4 +305,10 @@ for epoch in range(100):
     scheduler2.step()
     scheduler3.step()
 
+save_models(net1, net2, net3, epoch)
 plot_metrics()
+
+# Plot confusion matrices for each model
+plot_confusion_matrix(net1, testloader, classes, 'Confusion Matrix - ResNet18')
+plot_confusion_matrix(net2, testloader, classes, 'Confusion Matrix - ResNet18 with SE')
+plot_confusion_matrix(net3, testloader, classes, 'Confusion Matrix - ResNet18 with ECA')

@@ -75,8 +75,9 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         self.in_planes = 64
 
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
-                               stride=1, padding=1, bias=False)
+        
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1, bias=False) #MNIST
+    #    self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False) #Cifar-10
         self.bn1 = nn.BatchNorm2d(64)
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
@@ -190,7 +191,7 @@ class ResNet_Gelu(nn.Module):
         super(ResNet_Gelu, self).__init__()
         self.in_planes = 64
 
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=3,
                                stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
@@ -224,7 +225,7 @@ class ResNet_Leaky(nn.Module):
         super(ResNet_Leaky, self).__init__()
         self.in_planes = 64
 
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=3,
                                stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
@@ -434,67 +435,25 @@ class BasicBlock_with_SE(nn.Module):
         out += self.shortcut(x)
         out = F.relu(out)
         return out
-    
-class ResNet_with_SE(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
-        super(ResNet_with_SE, self).__init__()
-        self.in_planes = 64
-
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
-        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-        self.linear = nn.Linear(512 * block.expansion, num_classes)
-
-    def _make_layer(self, block, planes, num_blocks, stride):
-        strides = [stride] + [1] * (num_blocks - 1)
-        layers = []
-        for stride in strides:
-            layers.append(block(self.in_planes, planes, stride))
-            self.in_planes = planes * block.expansion
-        return nn.Sequential(*layers)
-
-    def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = self.layer1(out)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
-        out = F.avg_pool2d(out, 4)
-        out = out.view(out.size(0), -1)
-        out = self.linear(out)
-        return out
 
 # SE
 def ResNet18_with_SE():
-    return ResNet_with_SE(BasicBlock_with_SE, [2, 2, 2, 2])
+    return ResNet(BasicBlock_with_SE, [2, 2, 2, 2])
 
 class ECALayer(nn.Module):
     def __init__(self, channel, kernel_size=3):
         super(ECALayer, self).__init__()
         self.kernel_size = kernel_size
-        # 使用 conv1d 对通道进行卷积操作，输入维度是 (N, 1, C)
         self.conv = nn.Conv1d(1, 1, kernel_size=self.kernel_size, padding=(self.kernel_size-1)//2, bias=False)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        # 1. 对每个通道进行全局平均池化
         avg_pool = torch.mean(x, dim=[2, 3], keepdim=True)  # (N, C, 1, 1)
-        
-        # 2. 调整形状为 (N, 1, C) 以便输入 Conv1d
         avg_pool = avg_pool.view(avg_pool.size(0), 1, avg_pool.size(1))  # (N, 1, C)
-        
-        # 3. 对通道维度进行卷积操作
         attention = self.conv(avg_pool)  # (N, 1, C)
-        
-        # 4. 使用Sigmoid函数进行归一化
         attention = self.sigmoid(attention)  # (N, 1, C)
-        
-        # 5. 将注意力权重应用到原始特征图上
         attention = attention.view(attention.size(0), attention.size(2), 1, 1)  # (N, C, 1, 1)
-        return x * attention  # 返回加权后的特征图
+        return x * attention  
 
 
 class BasicBlock_with_ECA(nn.Module):
@@ -507,7 +466,7 @@ class BasicBlock_with_ECA(nn.Module):
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
 
-        # 添加 ECA 模块
+        # ECA
         self.eca = ECALayer(planes, kernel_size=3)
 
         self.shortcut = nn.Sequential()
@@ -521,7 +480,7 @@ class BasicBlock_with_ECA(nn.Module):
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.bn2(self.conv2(out))
 
-        # 应用 ECA 模块
+        # ECA
         out = self.eca(out)
 
         out += self.shortcut(x)
@@ -529,38 +488,5 @@ class BasicBlock_with_ECA(nn.Module):
         return out
 
 
-
-class ResNet_with_ECA(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10):
-        super(ResNet_with_ECA, self).__init__()
-        self.in_planes = 64
-
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
-        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-        self.linear = nn.Linear(512 * block.expansion, num_classes)
-
-    def _make_layer(self, block, planes, num_blocks, stride):
-        strides = [stride] + [1] * (num_blocks - 1)
-        layers = []
-        for stride in strides:
-            layers.append(block(self.in_planes, planes, stride))
-            self.in_planes = planes * block.expansion
-        return nn.Sequential(*layers)
-
-    def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = self.layer1(out)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
-        out = F.avg_pool2d(out, 4)
-        out = out.view(out.size(0), -1)
-        out = self.linear(out)
-        return out
-
 def ResNet18_with_ECA():
-    return ResNet_with_ECA(BasicBlock_with_ECA, [2, 2, 2, 2])
+    return ResNet(BasicBlock_with_ECA, [2, 2, 2, 2])

@@ -28,6 +28,7 @@ best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 # Data
+'''
 print('==> Preparing data..')
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
@@ -51,8 +52,39 @@ testset = torchvision.datasets.CIFAR10(
 testloader = torch.utils.data.DataLoader(
     testset, batch_size=100, shuffle=False, num_workers=2)
 
+    
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
+'''
+
+classes = ('0', '1', '2', '3', '4',
+           '5', '6', '7', '8', '9')
+
+# MNIST 
+transform_train = transforms.Compose([
+    transforms.ToTensor(),  
+    transforms.Normalize((0.1307,), (0.3081,))  
+])
+
+transform_test = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+])
+
+trainset = torchvision.datasets.MNIST(
+    root='./data', train=True, download=True, transform=transform_train
+)
+trainloader = torch.utils.data.DataLoader(
+    trainset, batch_size=128, shuffle=True, num_workers=2
+)
+
+testset = torchvision.datasets.MNIST(
+    root='./data', train=False, download=True, transform=transform_test
+)
+testloader = torch.utils.data.DataLoader(
+    testset, batch_size=100, shuffle=False, num_workers=2
+)
+
 
 # Model
 print('==> Building model..')
@@ -199,7 +231,7 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/train_metrics.png')
+    plt.savefig('plots/MNIST_18_34_train_metrics.png')
 
     plt.figure(figsize=(12, 6))
 
@@ -221,14 +253,23 @@ def plot_metrics():
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('plots/test_metrics.png')
+    plt.savefig('plots/MNIST_18_34_test_metrics.png')
 
-for epoch in range(110):
+def save_models(net1, net2, epoch):
+    save_dir = 'saved_models'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    torch.save(net1.state_dict(), os.path.join(save_dir, f'model_resnet18_epoch_{epoch}.pth'))
+    torch.save(net2.state_dict(), os.path.join(save_dir, f'model_resnet34_epoch_{epoch}.pth'))
+    print(f"Models saved at epoch {epoch}")
+
+for epoch in range(20):
     train(epoch)
     test(epoch)
     scheduler1.step()
     scheduler2.step()
 
-
+#save_models(net1, net2, epoch)
 plot_metrics()
 
